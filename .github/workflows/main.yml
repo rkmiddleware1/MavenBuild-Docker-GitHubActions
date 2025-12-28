@@ -1,33 +1,41 @@
-name: build java Application
+name: Build Java Application
+
 on:
-push:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
 jobs:
- builddeployjob:
-  runs-on: ubuntu-latest
-  steps:
-   - name: Checkout code
-     uses: actions/checkout@v6
-   - name: Install Java and Maven
-     uses: actions/setup-java@v5
-     with:
-      java-version: '17'
-      distribution: 'temurin'
-      cache: maven
-   - name: Install docker
-     uses: docker/setup-buildx-action@v3
-   - name: build the code
-     run: mvn package
-   - name: Loginto Docker Hub
-     uses: docker/login-action@v3
-     with:
-       username: ${{ secrets.DOCKERHUB_USERNAME }}
-       password: ${{ secrets.DOCKERHUB_TOKEN }}
-   - name: Build dockerfile and push Image
-     uses: docker/build-push-action@v6
-     with:
-      context: .    # path where dockerfile is- which is curent directory
-      tags: ravikadapa/custom1_images  # name of the image
-      push: true
+  builddeployjob:
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Install Java and Maven
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
 
+      - name: Build the Java application
+        run: mvn clean package
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ravikadapa/custom1_images:latest
